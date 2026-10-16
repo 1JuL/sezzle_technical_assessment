@@ -1,20 +1,24 @@
 {
   "name": "sezzle_technical_assessment",
   "version": "1.0.0",
-  "description": "full-stack calculator app",
+  "description": "Full-stack calculator application",
+  "private": true,
   "homepage": "https://github.com/1JuL/sezzle_technical_assessment#readme",
-  "bugs": {
-    "url": "https://github.com/1JuL/sezzle_technical_assessment/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/1JuL/sezzle_technical_assessment.git"
-  },
-  "license": "ISC",
   "author": "diego_diaz",
-  "type": "commonjs",
-  "main": "index.js",
+  "license": "ISC",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run start --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "dev": "npm start",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test",
+    "build": "npm run build --workspace=frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
