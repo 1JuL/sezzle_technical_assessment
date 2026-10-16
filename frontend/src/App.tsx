@@ -1,122 +1,169 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect } from "react";
+import { useCalculator } from "./useCalculator";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+type KeypadButton = {
+  label: string;
+  cls: string;
+  name?: string;
+  onClick: () => void;
+  active?: boolean;
+};
+
+export default function App() {
+  const {
+    display,
+    expression,
+    error,
+    operation,
+    isBusy,
+    inputDigit,
+    inputDecimal,
+    backspace,
+    toggleSign,
+    clear,
+    performSqrt,
+    performOperation,
+    calculateResult,
+  } = useCalculator();
+
+  // Keyboard shortcut listener mapped to calculator actions
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const { key } = event;
+
+      if (key >= "0" && key <= "9") {
+        event.preventDefault();
+        inputDigit(key);
+        return;
+      }
+
+      const keyActions: Record<string, () => void> = {
+        ".": inputDecimal,
+        ",": inputDecimal,
+        "+": () => performOperation("add"),
+        "-": () => performOperation("subtract"),
+        "*": () => performOperation("multiply"),
+        "/": () => performOperation("divide"),
+        "^": () => performOperation("power"),
+        "%": () => performOperation("percent"),
+        Enter: calculateResult,
+        "=": calculateResult,
+        Backspace: backspace,
+        Escape: clear,
+        c: clear,
+        C: clear,
+      };
+
+      const action = keyActions[key];
+      if (action) {
+        event.preventDefault();
+        action();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [inputDigit, inputDecimal, performOperation, calculateResult, backspace, clear]);
+
+  const buttons: KeypadButton[] = [
+    { label: "AC", cls: "func", name: "Clear", onClick: clear },
+    { label: "⌫", cls: "func", name: "Backspace", onClick: backspace },
+    {
+      label: "xʸ",
+      cls: "func",
+      name: "Power",
+      onClick: () => performOperation("power"),
+      active: operation === "power",
+    },
+    {
+      label: "÷",
+      cls: "op",
+      name: "Divide",
+      onClick: () => performOperation("divide"),
+      active: operation === "divide",
+    },
+
+    { label: "√", cls: "func", name: "Square root", onClick: performSqrt },
+    {
+      label: "%",
+      cls: "func",
+      name: "Percent",
+      onClick: () => performOperation("percent"),
+      active: operation === "percent",
+    },
+    { label: "±", cls: "func", name: "Toggle sign", onClick: toggleSign },
+    {
+      label: "×",
+      cls: "op",
+      name: "Multiply",
+      onClick: () => performOperation("multiply"),
+      active: operation === "multiply",
+    },
+
+    { label: "7", cls: "num", onClick: () => inputDigit("7") },
+    { label: "8", cls: "num", onClick: () => inputDigit("8") },
+    { label: "9", cls: "num", onClick: () => inputDigit("9") },
+    {
+      label: "−",
+      cls: "op",
+      name: "Subtract",
+      onClick: () => performOperation("subtract"),
+      active: operation === "subtract",
+    },
+
+    { label: "4", cls: "num", onClick: () => inputDigit("4") },
+    { label: "5", cls: "num", onClick: () => inputDigit("5") },
+    { label: "6", cls: "num", onClick: () => inputDigit("6") },
+    {
+      label: "+",
+      cls: "op",
+      name: "Add",
+      onClick: () => performOperation("add"),
+      active: operation === "add",
+    },
+
+    { label: "1", cls: "num", onClick: () => inputDigit("1") },
+    { label: "2", cls: "num", onClick: () => inputDigit("2") },
+    { label: "3", cls: "num", onClick: () => inputDigit("3") },
+    { label: "=", cls: "eq", name: "Equals", onClick: calculateResult },
+
+    { label: "0", cls: "num zero", onClick: () => inputDigit("0") },
+    { label: ".", cls: "num", name: "Decimal", onClick: inputDecimal },
+  ];
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="calculator-wrapper">
+      <div className="calculator" role="region" aria-label="Calculator">
+        <div className="display" aria-live="polite">
+          <div className="display-expr" data-testid="calculator-expression">
+            {expression || "\u00A0"}
+          </div>
+          <div
+            className={`display-main ${error ? "has-error" : ""}`}
+            data-testid="calculator-display"
+            title={display}
+          >
+            {display}
+          </div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="keypad">
+          {buttons.map(({ label, cls, name, onClick, active }) => (
+            <button
+              key={label}
+              type="button"
+              className={`btn ${cls} ${active ? "active" : ""}`}
+              onClick={onClick}
+              disabled={label === "=" && isBusy}
+              aria-label={name || label}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      </div>
+    </div>
+  );
 }
-
-export default App
